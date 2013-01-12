@@ -18,7 +18,8 @@ RESTRICT="test"
 RDEPEND="!sys-apps/busybox[mdev]"
 
 DEPEND="${RDEPEND}
-	>=sys-kernel/linux-headers-2.6.39"
+	>=sys-kernel/linux-headers-2.6.39
+	sys-apps/openrc"
 
 S=${WORKDIR}/${MY_P}
 QA_PRESTRIPPED="/sbin/mdev"
