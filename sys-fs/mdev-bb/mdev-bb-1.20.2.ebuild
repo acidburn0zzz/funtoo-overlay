@@ -72,5 +72,23 @@ src_install() {
 	doexe "${FILESDIR}"/settle-nics || die
 	doexe "${FILESDIR}"/storage-device || die
 	newinitd "${FILESDIR}"/mdev.init mdev || die
-	ln -s /etc/init.d/mdev ${D}/usr/share/openrc/runlevels/sysinit/mdev || die
+}
+
+add_init() {
+	local runl=$1
+	if [ ! -e ${ROOT}/etc/runlevels/${runl} ]
+	then
+		install -d -m0755 ${ROOT}/etc/runlevels/${runl}
+	fi
+	for initd in $*
+	do
+		# if the initscript is not going to be installed and  is not currently installed, return
+		[[ -e ${D}/etc/init.d/${initd} || -e ${ROOT}/etc/init.d/${initd} ]] || continue
+		[[ -e ${ROOT}/etc/runlevels/${runl}/${initd} ]] && continue
+		elog "Auto-adding '${initd}' service to your ${runl} runlevel"
+		ln -snf /etc/init.d/${initd} "${ROOT}"/etc/runlevels/${runl}/${initd}
+	done
+}
+pkg_postinst() {
+	add_init sysinit mdev
 }
