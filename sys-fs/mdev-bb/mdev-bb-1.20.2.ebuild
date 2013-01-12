@@ -71,4 +71,5 @@ src_install() {
 	doexe "${FILESDIR}"/settle-nics || die
 	doexe "${FILESDIR}"/storage-device || die
 	newinitd "${FILESDIR}"/mdev.init mdev || die
+	ln -s /etc/init.d/mdev ${D}/usr/share/openrc/runlevels/sysinit/mdev || die
 }
