@@ -48,7 +48,7 @@
 *sys-apps/grep
 *sys-apps/kbd
 *sys-apps/less
-*sys-apps/module-init-tools
+*virtual/modutils
 *sys-apps/net-tools
 #*>=sys-apps/portage-2.0.51.22
 *sys-process/procps
