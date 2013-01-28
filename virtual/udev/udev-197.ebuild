@@ -10,7 +10,7 @@ LICENSE=""
 SLOT="0"
 KEYWORDS="~*"
 # These default enabled IUSE flags should follow defaults of sys-fs/udev.
-IUSE="gudev hwdb introspection keymap +kmod selinux static-libs"
+IUSE="gudev +hwdb introspection keymap +kmod selinux static-libs"
 
 DEPEND=""
 RDEPEND="|| ( >=sys-fs/udev-197-r3[gudev?,hwdb?,introspection?,keymap?,kmod?,selinux?,static-libs?]

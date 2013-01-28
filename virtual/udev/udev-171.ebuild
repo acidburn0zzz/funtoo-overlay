@@ -10,7 +10,7 @@ LICENSE=""
 SLOT="0"
 KEYWORDS="*"
 # USE flags kmod and static-libs are here dummy in purpose
-IUSE="gudev hwdb introspection keymap +kmod selinux static-libs"
+IUSE="gudev +hwdb introspection keymap +kmod selinux static-libs"
 
 DEPEND=""
 RDEPEND="~sys-fs/udev-171[gudev?,hwdb?,introspection?,keymap?,selinux?]"
