@@ -14,7 +14,7 @@ HOMEPAGE="http://www.gentoo.org"
 
 LICENSE="GPL-2"
 SLOT="0"
-IUSE=""
+IUSE="build"
 
 if [ "${PV}" != "9999" ]; then
 	SRC_URI="http://dev.gentoo.org/~williamh/dist/${P}.tar.bz2"
