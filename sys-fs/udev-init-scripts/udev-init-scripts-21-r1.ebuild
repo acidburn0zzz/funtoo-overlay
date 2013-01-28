@@ -36,43 +36,70 @@ src_prepare()
 
 pkg_postinst()
 {
-	# If we are building stages, add udev and udev-mount to the sysinit runlevel
-	# automatically.
+	# If we are building stages, add udev and udev-mount to the default runlevel
+	# automatically. mdev-bb is already set to start at sysinit runlevel.
 	if use build
 	then
 		if [[ -x "${ROOT}"/etc/init.d/udev \
-			&& -d "${ROOT}"/etc/runlevels/sysinit ]]
+			&& -d "${ROOT}"/etc/runlevels/default ]]
 		then
-			ln -s /etc/init.d/udev "${ROOT}"/etc/runlevels/sysinit/udev
+			ln -s /etc/init.d/udev "${ROOT}"/etc/runlevels/default/udev
 		fi
 		if [[ -x "${ROOT}"/etc/init.d/udev-mount \
-			&& -d "${ROOT}"/etc/runlevels/sysinit ]]
+			&& -d "${ROOT}"/etc/runlevels/default ]]
 		then
 			ln -s /etc/init.d/udev-mount \
-				"${ROOT}"/etc/runlevels/sysinit/udev-mount
+				"${ROOT}"/etc/runlevels/default/udev-mount
 		fi
 	fi
 
-	# Warn the user about adding the scripts to their sysinit runlevel
-	if [[ -e "${ROOT}"/etc/runlevels/sysinit ]]
+	# Warn the user about adding the scripts to their sysinit or default runlevel
+	if [[ -e "${ROOT}"/etc/runlevels/default]]
 	then
-		if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/udev ]]
+		if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/mdev ]]
 		then
-			ewarn
-			ewarn "You need to add udev to the sysinit runlevel."
-			ewarn "If you do not do this,"
-			ewarn "your system will not be able to boot!"
-			ewarn "Run this command:"
-			ewarn "\trc-update add udev sysinit"
-		fi
-		if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/udev-mount ]]
-		then
-			ewarn
-			ewarn "You need to add udev-mount to the sysinit runlevel."
-			ewarn "If you do not do this,"
-			ewarn "your system will not be able to boot!"
-			ewarn "Run this command:"
-			ewarn "\trc-update add udev-mount sysinit"
+			if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/udev ]]
+			then
+				ewarn
+				ewarn "You need to add mdev or udev to the sysinit runlevel."
+				ewarn "If you do not do this,"
+				ewarn "your system will not be able to boot!"
+				ewarn "Run one of these commands:"
+				ewarn "\trc-update add mdev sysinit"
+				ewarn "\trc-update add udev sysinit"
+			fi
+			if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/udev-mount ]]
+			then
+				ewarn
+				ewarn "If you use udev instead of mdev in the sysinit runlevel,"
+				ewarn "you need to add udev-mount to the sysinit runlevel."
+				ewarn "If you do not do this,"
+				ewarn "your system will not be able to boot!"
+				ewarn "Run this command:"
+				ewarn "\trc-update add udev-mount sysinit"
+			fi
+		else
+			if [[ ! -e "${ROOT}"/etc/runlevels/default/udev ]]
+			then
+				ewarn
+				ewarn "If your desktop environment depends on udev, "
+				ewarn "you may need to add udev to the default runlevel."
+				ewarn "If you do not do this,"
+				ewarn "your desktop environment may not work!"
+				ewarn "Run this command:"
+				ewarn "\trc-update add udev default"
+			fi
+			if [[ ! -e "${ROOT}"/etc/runlevels/default/udev-mount ]]
+			then
+				ewarn
+				ewarn "If your desktop environment depends on udev, "
+				ewarn "you may need to add udev-mount to the default runlevel."
+				ewarn "If you do not do this,"
+				ewarn "your desktop environment may not work!"
+				ewarn "Run this command:"
+				ewarn "\trc-update add udev-mount default"
+			fi
+
 		fi
 	fi
 
