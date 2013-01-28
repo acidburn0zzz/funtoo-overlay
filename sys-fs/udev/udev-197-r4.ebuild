@@ -28,7 +28,7 @@ HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="LGPL-2.1 MIT GPL-2"
 SLOT="0"
-IUSE="acl doc gudev hwdb introspection keymap +kmod +openrc -predictablenetwork selinux static-libs"
+IUSE="acl doc gudev hwdb introspection keymap +kmod +openrc -predictable-network selinux static-libs"
 
 RESTRICT="test"
 
@@ -404,7 +404,7 @@ pkg_postinst()
 	copy_net_rules() {
 		[[ -f ${net_rules} ]] || cp "${ROOT}"usr/share/doc/${PF}/gentoo/80-net-name-slot.rules "${net_rules}"
 	}
-	if use predictablenework
+	if use predictable-nework
 	then
 		if [[ ${REPLACING_VERSIONS} ]] && [[ ${REPLACING_VERSIONS} < 197 ]]; then
 			ewarn "Because this is a upgrade we disable the new predictable network interface"
