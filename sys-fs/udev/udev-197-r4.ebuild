@@ -28,7 +28,7 @@ HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="LGPL-2.1 MIT GPL-2"
 SLOT="0"
-IUSE="acl doc gudev hwdb introspection keymap +kmod +openrc selinux static-libs"
+IUSE="acl doc gudev hwdb introspection keymap +kmod +openrc -predictablenetwork selinux static-libs"
 
 RESTRICT="test"
 
@@ -404,16 +404,22 @@ pkg_postinst()
 	copy_net_rules() {
 		[[ -f ${net_rules} ]] || cp "${ROOT}"usr/share/doc/${PF}/gentoo/80-net-name-slot.rules "${net_rules}"
 	}
+	if use predictablenework
+	then
+		if [[ ${REPLACING_VERSIONS} ]] && [[ ${REPLACING_VERSIONS} < 197 ]]; then
+			ewarn "Because this is a upgrade we disable the new predictable network interface"
+			ewarn "name scheme by default."
+			copy_net_rules
+		fi
 
-	if [[ ${REPLACING_VERSIONS} ]] && [[ ${REPLACING_VERSIONS} < 197 ]]; then
-		ewarn "Because this is a upgrade we disable the new predictable network interface"
-		ewarn "name scheme by default."
-		copy_net_rules
-	fi
-
-	if has_version sys-apps/biosdevname; then
-		ewarn "Because sys-apps/biosdevname is installed we disable the new predictable"
-		ewarn "network interface name scheme by default."
+		if has_version sys-apps/biosdevname; then
+			ewarn "Because sys-apps/biosdevname is installed we disable the new predictable"
+			ewarn "network interface name scheme by default."
+			copy_net_rules
+		fi
+	else
+		ewarn "The new predictable network interface has been disabled by predictablenetwork"
+		ewarn "use flag."
 		copy_net_rules
 	fi
 
