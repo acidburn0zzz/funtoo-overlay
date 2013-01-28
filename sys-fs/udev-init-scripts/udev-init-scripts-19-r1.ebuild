@@ -53,7 +53,7 @@ pkg_postinst()
 	fi
 
 	# Warn the user about adding the scripts to their sysinit or default runlevel
-	if [[ -e "${ROOT}"/etc/runlevels/default]]
+	if [[ -e "${ROOT}"/etc/runlevels/default ]]
 	then
 		if [[ ! -e "${ROOT}"/etc/runlevels/sysinit/mdev ]]
 		then
@@ -98,7 +98,6 @@ pkg_postinst()
 				ewarn "Run this command:"
 				ewarn "\trc-update add udev-mount default"
 			fi
-
 		fi
 	fi
 
