@@ -1,3 +1,8 @@
+# Oleg Vinichenko (20 Jan 2012)
+# mask latest pax-utils, it has some issues, ldtree (#452178),
+# breaks genkernels binaries (FL-345, #450688)
+>=app-misc/pax-utils-0.6
+
 # Oleg Vinichenko (25 Dec 2012)
 # FL-288 mask latests syslinux
 >=sys-boot/syslinux-5.00
@@ -42,11 +47,6 @@
 =dev-lang/python-2.7.4_pre*
 =dev-lang/python-3.2.4_pre*
 =dev-lang/python-3.3_pre*
-
-# Martin Scholz (03 May 2012)
-# masking newer versions of grub
-# included Daniel Robbins old mask
->=sys-boot/grub-1.99
 
 # Oleg Vinichenko (2 Apr 2012)
 # mask a live hwids ebuild
