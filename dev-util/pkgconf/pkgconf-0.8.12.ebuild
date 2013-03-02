@@ -6,9 +6,8 @@ if [[ ${PV} == "9999" ]] ; then
 	EGIT_REPO_URI="git://github.com/pkgconf/pkgconf.git"
 	inherit autotools git-2
 else
-	inherit autotools vcs-snapshot
 	inherit eutils
-	SRC_URI="https://github.com/pkgconf/pkgconf/tarball/${P} -> ${P}.tar.gz"
+	SRC_URI="http://tortois.es/~nenolod/distfiles/${P}.tar.bz2"
 	KEYWORDS="*"
 fi
 
