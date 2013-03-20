@@ -1,8 +1,6 @@
-# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/gcc/gcc-4.7.2.ebuild,v 1.7 2012/11/24 21:22:30 vapier Exp $
 
-PATCH_VER="1.3"
+PATCH_VER="1.5"
 UCLIBC_VER="1.0"
 
 # Hardened gcc 4 stuff
