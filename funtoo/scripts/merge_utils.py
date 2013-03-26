@@ -356,7 +356,7 @@ class InsertEbuilds(MergeStep):
 				if self.replace == True or (type(self.replace) == types.ListType and "%s/%s" % (cat,pkg) in self.replace):
 					if not os.path.exists(tcatdir):
 						os.makedirs(tcatdir)
-					if isinstance(self.merge, list) and "%s/%s" % (cat,pkg) in self.merge:
+					if isinstance(self.merge, list) and "%s/%s" % (cat,pkg) in self.merge and os.path.isdir(tpkgdir):
 						pkgdir_manifest_file = open("%s/Manifest" % pkgdir)
 						tpkgdir_manifest_file = open("%s/Manifest" % tpkgdir)
 						pkgdir_manifest = pkgdir_manifest_file.readlines()
@@ -410,7 +410,7 @@ class ProfileDepFix(MergeStep):
 
 class GenCache(MergeStep):
 	def run(self,tree):
-		runShell("egencache --update --portdir=%s --jobs=12" % tree.root, abortOnFail=False)
+		runShell("egencache --update --portdir=%s --jobs=4" % tree.root, abortOnFail=False)
 
 class GitPrep(MergeStep):
 	def __init__(self,branch):
