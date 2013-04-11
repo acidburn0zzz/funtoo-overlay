@@ -1,26 +1,13 @@
 # Keep the most recent masks in a reverse chrono order
 # newest on top
 
-# Jean-Francis Roy (1 april 2013)
-# FL-477: new networkmanager, masked for testing
->=net-misc/networkmanager-0.9.8
-
-# OLeg Vinichenko (15 Mar 2013)
-# FL-427, FL-66, new openrc, masked for testing
-=sys-apps/openrc-0.10.2-r8
-
-# Oleg Vinichenko (29 Jan 2012)
-# add newest openvz kernel, masked fo testing, FL-379
->=sys-kernel/openvz-rhel6-stable-2.6.32.042.075
+# Daniel Robbins (10 Apr 2013)
+# FL-487: staging zenoss, as it is a work in progress.
+sys-monitor/zenoss
 
 # Oleg Vinichenko (5 Nov 2012)
 # FL-213: avx fixes to glibc, test mask
 >=sys-libs/glibc-2.15-r4
-
-# Oleg Vinichenko (8 Sep 2012)
-# new openvz testing kernel, now works with newest toolchain.
-# binutils-2.22 required! masked for testing FL-43 compatibility
-=sys-kernel/openvz-rhel6-test-2.6.32.042.061.8
 
 #Daniel Robbins (19 Dec 2011)
 #I am working on this ebuild - not yet ready for prime time.
