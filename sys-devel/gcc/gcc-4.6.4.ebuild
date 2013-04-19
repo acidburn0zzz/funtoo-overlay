@@ -44,8 +44,8 @@ pkg_setup() {
 	GCC_CONFIG_VER=${PV}
 	DATAPATH=${PREFIX}/share/gcc-data/${CTARGET}/${GCC_CONFIG_VER}
 	BINPATH=${PREFIX}/${CTARGET}/gcc-bin/${GCC_CONFIG_VER}
-	STDCXX_INCDIR=${PREFIX}/lib/gcc/${CTARGET}/${GCC_CONFIG_VER}/include/g++-v${GCC_BRANCH_VER}
-	LIBPATH=${PREFIX}/lib/gcc/${CTARGET}/${GCC_BRANCH_VER/\.*/}
+	LIBPATH=${PREFIX}/lib/gcc/${CTARGET}/${GCC_CONFIG_VER}
+	STDCXX_INCDIR=${LIBPATH}/include/g++-v${GCC_BRANCH_VER}
 }
 
 src_unpack() {
@@ -100,51 +100,19 @@ src_configure() {
 src_compile() {
 	cd $WORKDIR/objdir
 	unset ABI
-	emake
+	emake LIBPATH="${LIBPATH}" || die "compile fail"
 }
 
 create_gcc_env_entry() {
 	dodir /etc/env.d/gcc
 	local gcc_envd_base="/etc/env.d/gcc/${CTARGET}-${GCC_CONFIG_VER}"
-
-	local gcc_specs_file
 	local gcc_envd_file="${D}${gcc_envd_base}"
-	if [[ -z $1 ]] ; then
-		# I'm leaving the following commented out to remind me that it
-		# was an insanely -bad- idea. Stuff broke. GCC_SPECS isnt unset
-		# on chroot or in non-toolchain.eclass gcc ebuilds!
-		#gcc_specs_file="${LIBPATH}/specs"
-		gcc_specs_file=""
-	else
-		gcc_envd_file+="-$1"
-		gcc_specs_file="${LIBPATH}/$1.specs"
-	fi
-	# We want to list the default ABI's LIBPATH first so libtool
-	# searches that directory first.  This is a temporary
-	# workaround for libtool being stupid and using .la's from
-	# conflicting ABIs by using the first one in the search path
-	local ldpaths mosdirs
-	local mdir mosdir abi ldpath
-	for abi in $(get_all_abis TARGET) ; do
-		mdir=$($(XGCC) $(get_abi_CFLAGS ${abi}) --print-multi-directory)
-		ldpath=${LIBPATH}
-		[[ ${mdir} != "." ]] && ldpath+="/${mdir}"
-		ldpaths="${ldpath}${ldpaths:+:${ldpaths}}"
-		mosdir=$($(XGCC) $(get_abi_CFLAGS ${abi}) -print-multi-os-directory)
-		mosdirs="${mosdir}${mosdirs:+:${mosdirs}}"
-	done
-
 	cat <<-EOF > ${gcc_envd_file}
-	PATH="${BINPATH}"
-	ROOTPATH="${BINPATH}"
 	GCC_PATH="${BINPATH}"
-	LDPATH="${ldpaths}"
+	LDPATH="${LIBPATH}:${LIBPATH}/32"
 	MANPATH="${DATAPATH}/man"
 	INFOPATH="${DATAPATH}/info"
 	STDCXX_INCDIR="${STDCXX_INCDIR##*/}"
-	CTARGET="${CTARGET}"
-	GCC_SPECS="${gcc_specs_file}"
-	MULTIOSDIRS="${mosdirs}"
 	EOF
 }
 
@@ -319,6 +287,7 @@ src_install() {
 	# for people who are testing as non-root.
 	chown -R root:0 "${D}"${LIBPATH} 2>/dev/null
 	find "${D}/${LIBPATH}" -name libstdc++.la -type f -exec rm "{}" \;
+	find "${D}/${LIBPATH}" -name "*.py" -type f -exec rm "{}" \;
 
 # GENTOO ENV SETUP
 
@@ -330,10 +299,10 @@ src_install() {
 
 	# Rather install the script, else portage with changing $FILESDIR
 	# between binary and source package borks things ....
-	insinto "${DATAPATH}"
-	newins "${FILESDIR}"/awk/fixlafiles.awk-no_gcc_la fixlafiles.awk || die
-	exeinto "${DATAPATH}"
-	doexe "${FILESDIR}"/fix_libtool_files.sh || die
+#	insinto "${DATAPATH}"
+#	newins "${FILESDIR}"/awk/fixlafiles.awk-no_gcc_la fixlafiles.awk || die
+#	exeinto "${DATAPATH}"
+#	doexe "${FILESDIR}"/fix_libtool_files.sh || die
 	doexe "${FILESDIR}"/c{89,99} || die
 
 # Don't scan .gox files for executable stacks - false positives
