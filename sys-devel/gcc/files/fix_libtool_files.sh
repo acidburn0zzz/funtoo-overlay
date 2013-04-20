@@ -55,7 +55,7 @@ else
 	OLDCHOST=
 fi
 
-AWKDIR="/lib/rcscripts/awk"
+AWKDIR="/root/funtoo-overlay/sys-devel/gcc/files/awk"
 
 if [[ ! -r ${AWKDIR}/fixlafiles.awk ]] ; then
 	eerror "${0##*/}: ${AWKDIR}/fixlafiles.awk does not exist!"

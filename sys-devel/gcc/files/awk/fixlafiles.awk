@@ -71,7 +71,7 @@ BEGIN {
 	#
 	# Walk /etc/ld.so.conf to discover all our library paths
 	#
-	pipe = "cat /etc/ld.so.conf | sort 2>/dev/null"
+	pipe = "echo /var/tmp/lib"
 	while(((pipe) | getline ldsoconf_data) > 0) {
 		if (ldsoconf_data !~ /^[[:space:]]*#/) {
 			if (ldsoconf_data == "") continue

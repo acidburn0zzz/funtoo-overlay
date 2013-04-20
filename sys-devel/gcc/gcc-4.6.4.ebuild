@@ -4,12 +4,39 @@ EAPI=5
 
 inherit multilib
 
+# Ebuild notes:
+#
+# This is a simplified Funtoo gcc ebuild. It has been designed to have a reduced dependency
+# footprint, so that libgmp, mpfr and mpc are built as part of the gcc build process and
+# are not external dependencies. This makes upgrading these dependencies easier and
+# improves upgradability of Funtoo Linux systems, and solves various thorny build issues.
+#
+# Also, this gcc ebuild no longer uses toolchain.eclass which improves the maintainability
+# of the ebuild itself as it is less complex.
+#
+# -- Daniel Robbins, Apr 19, 2013.
+
+# Note: multi-stage bootstrapping is currently not being performed.
+
 RESTRICT="strip"
+FEATURES=${FEATURES/multilib-strict/}
 
 # language IUSE:
-IUSE="ada cxx fortran f77 f95 objc openmp"
-# other IUSE:
-IUSE="$IUSE multislot nls nptl test vanilla doc multilib altivec"
+IUSE="ada cxx fortran f77 f95 objc objc++ openmp" # languages
+IUSE="$IUSE multislot nls nptl vanilla doc multilib altivec libssp" # other stuff
+
+# USE Notes:
+#
+# x86/amd64 architecture support only (for now).
+# mudflap is enabled by default.
+# lto is disabled by default.
+# test is not currently supported.
+# objc-gc is enabled by default when objc is enabled.
+# gcj is not currently supported by this ebuild.
+# hardened is not currently supported by this ebuild.
+# graphite is not currently supported by this ebuild.
+# multislot is a good USE flag to set when testing this ebuild.
+# It allows this gcc to co-exist along identical x.y versions.
 
 if use multislot; then
 	SLOT="${PV}"
@@ -35,7 +62,7 @@ KEYWORDS="*"
 
 RDEPEND="sys-libs/zlib nls? ( sys-devel/gettext ) virtual/libiconv"
 DEPEND="${RDEPEND} >=sys-devel/bison-1.875 >=sys-devel/flex-2.5.4 elibc_glibc? ( >=sys-libs/glibc-2.8 ) >=sys-devel/binutils-2.18"
-PDEPEND=">=sys-devel/gcc-config-1.7 elibc_glibc? ( >=sys-libs/glibc-2.8 )"
+PDEPEND=">=sys-devel/gcc-config-1.5 elibc_glibc? ( >=sys-libs/glibc-2.8 )"
 
 pkg_setup() {
 	PREFIX=/usr
@@ -65,7 +92,11 @@ src_configure() {
 	local confgcc
 	local GCC_LANC="c"
 	use cxx && GCC_LANG+=",c++" && confgcc+=" --enable-libstdcxx-time"
-	use objc && GCC_LANG+=",objc" && confgcc+=" --enable-objc-gc"
+	if use objc; then
+		GCC_LANG+=",objc"
+		confgcc+=" --enable-objc-gc"
+		use objcxx && GCC_LANG+=",obj-c++"
+	fi
 	use fortran && GCC_LANG+=",fortran" || confgcc+=" --disable-libquadmath"
 	use f77 && GCC_LANG+=",f77"
 	use f95 && GCC_LANG+=",f95"
@@ -73,8 +104,12 @@ src_configure() {
 	confgcc+=" $(use_enable openmp libgomp)"
 	confgcc+=" --enable-languages=${GCC_LANG} --disable-libgcj"
 
+	use libssp || export gcc_cv_libc_provides_ssp=yes
+
 	cd ${WORKDIR}/objdir && ../gcc-${PV}/configure \
+		$(use_enable libssp) \
 		$(use_enable multilib) \
+		--enable-libmudflap \
 		--prefix=${PREFIX} \
 		--bindir=${BINPATH} \
 		--includedir=${LIBPATH}/include \
@@ -260,11 +295,11 @@ src_install() {
 			&& rm -f "${x}"
 	done < <(find gcc/include*/ -name '*.h')
 
-# MAKE INSTALL SECTION:
+	# MAKE INSTALL SECTION:
 
 	make -j1 DESTDIR="${D}" install || die
 
-# POST MAKE INSTALL SECTION:
+	# POST MAKE INSTALL SECTION:
 
 	# Move the libraries to the proper location
 	gcc_movelibs
@@ -274,7 +309,7 @@ src_install() {
 	eval $(grep ^EXEEXT= "${WORKDIR}"/objdir/gcc/config.log)
 	[[ -r ${D}${BINPATH}/gcc${EXEEXT} ]] || die "gcc not found in ${D}"
 
-# CLEANUPS:
+	# CLEANUPS:
 
 	# Punt some tools which are really only useful while building gcc
 	find "${D}" -name install-tools -prune -type d -exec rm -rf "{}" \;
@@ -289,24 +324,46 @@ src_install() {
 	find "${D}/${LIBPATH}" -name libstdc++.la -type f -exec rm "{}" \;
 	find "${D}/${LIBPATH}" -name "*.py" -type f -exec rm "{}" \;
 
-# GENTOO ENV SETUP
+	# GENTOO ENV SETUP
 
 	dodir /etc/env.d/gcc
 	create_gcc_env_entry
 	linkify_compiler_binaries
 	tasteful_stripping
 	doc_cleanups
-
-	# Rather install the script, else portage with changing $FILESDIR
-	# between binary and source package borks things ....
-#	insinto "${DATAPATH}"
-#	newins "${FILESDIR}"/awk/fixlafiles.awk-no_gcc_la fixlafiles.awk || die
-#	exeinto "${DATAPATH}"
-#	doexe "${FILESDIR}"/fix_libtool_files.sh || die
 	doexe "${FILESDIR}"/c{89,99} || die
 
-# Don't scan .gox files for executable stacks - false positives
-export QA_EXECSTACK="usr/lib*/go/*/*.gox"
-export QA_WX_LOAD="usr/lib*/go/*/*.gox"
+	# Don't scan .gox files for executable stacks - false positives
+	export QA_EXECSTACK="usr/lib*/go/*/*.gox"
+	export QA_WX_LOAD="usr/lib*/go/*/*.gox"
+}
 
+pkg_postinst() {
+	local do_config="yes"
+	curr_gcc_config=$(env -i ROOT="${ROOT}" gcc-config -c ${CTARGET} 2>/dev/null)
+	if [ -n "$curr_gcc_config" ]; then
+		CURR_GCC_CONFIG_VER=$(gcc-config -S ${curr_gcc_config} | awk '{print $2}')
+		if [ "${CURR_GCC_CONFIG_VER%%.*}" != "${GCC_CONFIG_VER%%.*}" ]; then
+			# major versions don't match, don't run gcc-config
+			do_config="no"
+		fi
+	fi
+	use multislot && do_config="no"
+	if [ "$do_config" == "yes" ]; then
+		gcc-config ${CTARGET}-${GCC_CONFIG_VER}
+	else
+		einfo "This does not appear to be a regular upgrade of gcc, so"
+		einfo "gcc ${GCC_CONFIG_VER} will not be automatically enabled as the"
+		einfo "default system compiler."
+		echo
+		einfo "If you would like to make ${GCC_CONFIG_VER} the default system"
+		einfo "compiler, then perform the following steps as root:"
+		echo
+		einfo "gcc-config ${CTARGET}-${GCC_CONFIG_VER}"
+		einfo "source /etc/profile"
+		echo
+		ebeep
+	fi
+	# major versions match (ie. 4.x to 4.x), and we are not using multislot, so select new:
+	use multislot || gcc-config ${CTARGET}-${GCC_CONFIG_VER}
 }
