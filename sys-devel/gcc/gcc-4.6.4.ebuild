@@ -87,6 +87,16 @@ src_unpack() {
 	mkdir ${WORKDIR}/objdir
 }
 
+src_prepare() {
+
+	# for some reason, when upgrading gcc, the gcc Makefile will install stuff
+	# into the old gcc's version directory. This fixes this for things like
+	# crtbegin.o, etc. This is because it uses the current gcc to determine
+	# the install path. Override this:
+
+	sed -i -e "s/^version :=.*/version := ${GCC_CONFIG_VER}/" ${S}/libgcc/Makefile.in || die
+}
+
 src_configure() {
 
 	# Determine language support:
@@ -132,18 +142,6 @@ src_configure() {
 		--with-pkgversion="Funtoo ${PVR}" \
 		$confgcc \
 		|| die "configure fail"
-
-	# for some reason, when upgrading gcc, the gcc Makefile will install stuff
-	# into the old gcc's version directory. This fixes this for things like
-	# crtbegin.o, etc.:
-
-	local mkfix
-	for x in libgcc 32/libgcc;
-	do
-		mkfix=${WORKDIR}/objdir/${CTARGET}/$x/Makefile
-		[ ! -e $mkfix ] && continue
-		sed -i -e "s/^version :=.*/version := ${GCC_CONFIG_VER}/" $mkfix || die
-	done
 }
 
 src_compile() {
