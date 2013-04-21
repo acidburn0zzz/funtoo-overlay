@@ -65,6 +65,8 @@ DEPEND="${RDEPEND} >=sys-devel/bison-1.875 >=sys-devel/flex-2.5.4 elibc_glibc? (
 PDEPEND=">=sys-devel/gcc-config-1.5 elibc_glibc? ( >=sys-libs/glibc-2.8 )"
 
 pkg_setup() {
+	unset GCC_SPECS # we don't want to use the installed compiler's specs to build gcc!
+	unset LANGUAGES #265283
 	PREFIX=/usr
 	CTARGET=$CHOST
 	GCC_BRANCH_VER=${SLOT}
@@ -130,6 +132,18 @@ src_configure() {
 		--with-pkgversion="Funtoo ${PVR}" \
 		$confgcc \
 		|| die "configure fail"
+
+	# for some reason, when upgrading gcc, the gcc Makefile will install stuff
+	# into the old gcc's version directory. This fixes this for things like
+	# crtbegin.o, etc.:
+
+	local mkfix
+	for x in libgcc 32/libgcc;
+	do
+		mkfix=${WORKDIR}/objdir/${CTARGET}/$x/Makefile
+		[ ! -e $mkfix ] && continue
+		sed -i -e "s/^version :=.*/version := ${GCC_CONFIG_VER}/" $mkfix || die
+	done
 }
 
 src_compile() {
@@ -258,14 +272,6 @@ gcc_movelibs() {
 			fi
 		done
 		fix_libtool_libdir_paths "${LIBPATH}/${MULTIDIR}"
-
-		# SLOT up libgcj.pc if it's available (and let gcc-config worry about links)
-		FROMDIR="${PREFIX}/lib/${OS_MULTIDIR}"
-		for x in "${D}${FROMDIR}"/pkgconfig/libgcj*.pc ; do
-			[[ -f ${x} ]] || continue
-			sed -i "/^libdir=/s:=.*:=${LIBPATH}/${MULTIDIR}:" "${x}"
-			mv "${x}" "${D}${FROMDIR}"/pkgconfig/libgcj-${GCC_PV}.pc || die
-		done
 	done
 
 	# We remove directories separately to avoid this case:
@@ -331,6 +337,7 @@ src_install() {
 	linkify_compiler_binaries
 	tasteful_stripping
 	doc_cleanups
+	exeinto "${DATAPATH}"
 	doexe "${FILESDIR}"/c{89,99} || die
 
 	# Don't scan .gox files for executable stacks - false positives
