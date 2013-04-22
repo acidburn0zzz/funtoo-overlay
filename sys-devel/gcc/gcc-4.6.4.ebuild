@@ -141,14 +141,14 @@ src_configure() {
 		--with-bugurl=http://bugs.funtoo.org \
 		--with-pkgversion="Funtoo ${PVR}" \
 		--with-mpfr-include=${S}/mpfr/src \
-		--with-mpfr-lib=${S}/mpfr/src/.libs \
+		--with-mpfr-lib=${WORKDIR}/objdir/mpfr/src/.libs \
 		$confgcc \
 		|| die "configure fail"
 
-	# The --with-mpfr* lines above are used to that gcc-4.6.4 can find mpfr-3.1.2.
+	# The --with-mpfr* lines above are used so that gcc-4.6.4 can find mpfr-3.1.2.
 	# It can find 2.4.2 with no problem automatically but needs help with newer versions
-	# due to mpfr dir structure changes.
-
+	# due to mpfr dir structure changes. We look for includes in the source directory,
+	# and libraries in the build (objdir) directory.
 }
 
 src_compile() {
