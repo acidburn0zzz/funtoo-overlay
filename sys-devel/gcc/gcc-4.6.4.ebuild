@@ -376,6 +376,4 @@ pkg_postinst() {
 		echo
 		ebeep
 	fi
-	# major versions match (ie. 4.x to 4.x), and we are not using multislot, so select new:
-	use multislot || gcc-config ${CTARGET}-${GCC_CONFIG_VER}
 }
