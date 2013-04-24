@@ -111,7 +111,7 @@ src_prepare() {
 src_configure() {
 	# Determine language support:
 	local confgcc
-	local GCC_LANC="c"
+	local GCC_LANG="c"
 	use cxx && GCC_LANG+=",c++" && confgcc+=" --enable-libstdcxx-time"
 	if use objc; then
 		GCC_LANG+=",objc"
