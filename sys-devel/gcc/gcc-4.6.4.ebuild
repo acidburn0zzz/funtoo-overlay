@@ -21,7 +21,6 @@ inherit multilib
 RESTRICT="strip"
 FEATURES=${FEATURES/multilib-strict/}
 
-# language IUSE:
 IUSE="ada cxx fortran f77 f95 objc objc++ openmp" # languages
 IUSE="$IUSE multislot nls nptl vanilla doc multilib altivec libssp" # other stuff
 
@@ -88,10 +87,9 @@ src_unpack() {
 }
 
 src_prepare() {
-	# for some reason, when upgrading gcc, the gcc Makefile will install stuff
-	# into the old gcc's version directory. This fixes this for things like
-	# crtbegin.o, etc. This is because it uses the current gcc to determine
-	# the install path. Override this:
+	# For some reason, when upgrading gcc, the gcc Makefile will install stuff
+	# like crtbegin.o into a subdirectory based on the name of the currently-installed
+	# gcc version, rather than *our* gcc version. Manually fix this:
 
 	sed -i -e "s/^version :=.*/version := ${GCC_CONFIG_VER}/" ${S}/libgcc/Makefile.in || die
 
@@ -111,9 +109,7 @@ src_prepare() {
 }
 
 src_configure() {
-
 	# Determine language support:
-
 	local confgcc
 	local GCC_LANC="c"
 	use cxx && GCC_LANG+=",c++" && confgcc+=" --enable-libstdcxx-time"
@@ -240,43 +236,44 @@ src_install() {
 	# from toolchain eclass:
 	# Do allow symlinks in private gcc include dir as this can break the build
 	find gcc/include*/ -type l -delete
+
 	# Remove generated headers, as they can cause things to break
 	# (ncurses, openssl, etc).
-
 	while read x; do
 		grep -q 'It has been auto-edited by fixincludes from' "${x}" \
 			&& echo "Removing auto-generated header: $x" \
 			&& rm -f "${x}"
 	done < <(find gcc/include*/ -name '*.h')
 
-	# MAKE INSTALL SECTION:
+# MAKE INSTALL SECTION:
 
 	make -j1 DESTDIR="${D}" install || die
 
-	# POST MAKE INSTALL SECTION:
+# POST MAKE INSTALL SECTION:
+
 	# Basic sanity check
 	local EXEEXT
 	eval $(grep ^EXEEXT= "${WORKDIR}"/objdir/gcc/config.log)
 	[[ -r ${D}${BINPATH}/gcc${EXEEXT} ]] || die "gcc not found in ${D}"
 
-	# CLEANUPS:
+# GENTOO ENV SETUP
+
+	dodir /etc/env.d/gcc
+	create_gcc_env_entry
+
+# CLEANUPS:
+
 	# Punt some tools which are really only useful while building gcc
 	find "${D}" -name install-tools -prune -type d -exec rm -rf "{}" \;
 	# This one comes with binutils
 	find "${D}" -name libiberty.a -delete
 	# prune empty dirs left behind
 	find "${D}" -depth -type d -delete 2>/dev/null
-	# Use gid of 0 because some stupid ports don't have
-	# the group 'root' set to gid 0.  Send to /dev/null
-	# for people who are testing as non-root.
+	# ownership fix:
 	chown -R root:0 "${D}"${LIBPATH} 2>/dev/null
 	find "${D}/${LIBPATH}" -name libstdc++.la -type f -exec rm "{}" \;
 	find "${D}/${LIBPATH}" -name "*.py" -type f -exec rm "{}" \;
 
-	# GENTOO ENV SETUP
-
-	dodir /etc/env.d/gcc
-	create_gcc_env_entry
 	linkify_compiler_binaries
 	tasteful_stripping
 	doc_cleanups
@@ -289,6 +286,14 @@ src_install() {
 }
 
 pkg_postinst() {
+
+	# Here, we will auto-enable the new compiler if none is currently enabled, or
+	# if this is an _._.x upgrade to an already-installed compiler.
+
+	# One exception is if multislot is enabled in USE, which allows ie. 4.6.9
+	# and 4.6.10 to exist alongside one another. In this case, the user must
+	# enable this compiler manually.
+
 	local do_config="yes"
 	curr_gcc_config=$(env -i ROOT="${ROOT}" gcc-config -c ${CTARGET} 2>/dev/null)
 	if [ -n "$curr_gcc_config" ]; then
@@ -297,8 +302,8 @@ pkg_postinst() {
 			# major versions don't match, don't run gcc-config
 			do_config="no"
 		fi
+		use multislot && do_config="no"
 	fi
-	use multislot && do_config="no"
 	if [ "$do_config" == "yes" ]; then
 		gcc-config ${CTARGET}-${GCC_CONFIG_VER}
 	else
