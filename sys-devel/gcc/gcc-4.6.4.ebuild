@@ -83,18 +83,31 @@ src_unpack() {
 	( unpack mpfr-${MPFR_VER}.tar.xz && mv ${WORKDIR}/mpfr-${MPFR_VER} ${S}/mpfr ) || die "mpfr setup fail"
 	( unpack gmp-${GMP_VER}.tar.xz && mv ${WORKDIR}/gmp-${GMP_VER} ${S}/gmp ) || die "gmp setup fail"
 	cd $S
-	[[ ${CHOST} == ${CTARGET} ]] && cat "${FILESDIR}"/gcc-spec-env.patch | patch -p1 || die "patch fail"
+
 	mkdir ${WORKDIR}/objdir
 }
 
 src_prepare() {
-
 	# for some reason, when upgrading gcc, the gcc Makefile will install stuff
 	# into the old gcc's version directory. This fixes this for things like
 	# crtbegin.o, etc. This is because it uses the current gcc to determine
 	# the install path. Override this:
 
 	sed -i -e "s/^version :=.*/version := ${GCC_CONFIG_VER}/" ${S}/libgcc/Makefile.in || die
+
+	# The following patch allows pie/ssp specs to be changed via environment
+	# variable, which is needed for gcc-config to allow switching of compilers:
+
+	[[ ${CHOST} == ${CTARGET} ]] && cat "${FILESDIR}"/gcc-spec-env.patch | patch -p1 || die "patch fail"
+
+	# We use --enable-version-specific-libs with ./configure. This
+	# option is designed to place all our libraries into a sub-directory
+	# rather than /usr/lib*.  However, this option, even through 4.8.0,
+	# does not work 100% correctly without a small fix for
+	# libgcc_s.so. See: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=32415.
+	# So, we apply a small patch to get this working:
+
+	cat "${FILESDIR}"/gcc-4.6.4-fix-libgcc-s-path-with-vsrl.patch | patch -p1 || die "patch fail"
 }
 
 src_configure() {
@@ -121,6 +134,7 @@ src_configure() {
 	cd ${WORKDIR}/objdir && ../gcc-${PV}/configure \
 		$(use_enable libssp) \
 		$(use_enable multilib) \
+		--enable-version-specific-runtime-libs \
 		--enable-libmudflap \
 		--prefix=${PREFIX} \
 		--bindir=${BINPATH} \
@@ -218,77 +232,6 @@ doc_cleanups() {
 		|| prepman "${DATAPATH}"
 }
 
-# make sure the libtool archives have libdir set to where they actually
-# -are-, and not where they -used- to be.  also, any dependencies we have
-# on our own .la files need to be updated.
-fix_libtool_libdir_paths() {
-	pushd "${D}" >/dev/null
-
-	pushd "./${1}" >/dev/null
-	local dir="${PWD#${D%/}}"
-	local allarchives=$(echo *.la)
-	allarchives="\(${allarchives// /\\|}\)"
-	popd >/dev/null
-
-	sed -i \
-		-e "/^libdir=/s:=.*:='${dir}':" \
-		./${dir}/*.la
-	sed -i \
-		-e "/^dependency_libs=/s:/[^ ]*/${allarchives}:${LIBPATH}/\1:g" \
-		$(find ./${PREFIX}/lib* -maxdepth 3 -name '*.la') \
-		./${dir}/*.la
-
-	popd >/dev/null
-}
-
-get_make_var() {
-	local var=$1 makefile=${2:-${WORKDIR}/objdir/Makefile}
-	echo -e "e:\\n\\t@echo \$(${var})\\ninclude ${makefile}" | \
-		r=${makefile%/*} emake --no-print-directory -s -f - 2>/dev/null
-}
-XGCC() { get_make_var GCC_FOR_TARGET ; }
-
-gcc_movelibs() {
-	local x multiarg removedirs=""
-	for multiarg in $($(XGCC) -print-multi-lib) ; do
-		multiarg=${multiarg#*;}
-		multiarg=${multiarg//@/ -}
-
-		local OS_MULTIDIR=$($(XGCC) ${multiarg} --print-multi-os-directory)
-		local MULTIDIR=$($(XGCC) ${multiarg} --print-multi-directory)
-		local TODIR=${D}${LIBPATH}/${MULTIDIR}
-		local FROMDIR=
-
-		[[ -d ${TODIR} ]] || mkdir -p ${TODIR}
-
-		for FROMDIR in \
-			${LIBPATH}/${OS_MULTIDIR} \
-			${LIBPATH}/../${MULTIDIR} \
-			${PREFIX}/lib/${OS_MULTIDIR} \
-			${PREFIX}/${CTARGET}/lib/${OS_MULTIDIR}
-		do
-			removedirs="${removedirs} ${FROMDIR}"
-			FROMDIR=${D}${FROMDIR}
-			if [[ ${FROMDIR} != "${TODIR}" && -d ${FROMDIR} ]] ; then
-				local files=$(find "${FROMDIR}" -maxdepth 1 ! -type d 2>/dev/null)
-				if [[ -n ${files} ]] ; then
-					mv ${files} "${TODIR}"
-				fi
-			fi
-		done
-		fix_libtool_libdir_paths "${LIBPATH}/${MULTIDIR}"
-	done
-
-	# We remove directories separately to avoid this case:
-	#	mv SRC/lib/../lib/*.o DEST
-	#	rmdir SRC/lib/../lib/
-	#	mv SRC/lib/../lib32/*.o DEST  # Bork
-	for FROMDIR in ${removedirs} ; do
-		rmdir "${D}"${FROMDIR} >& /dev/null
-	done
-	find "${D}" -type d | xargs rmdir >& /dev/null
-}
-
 src_install() {
 	S=$WORKDIR/objdir; cd $S
 
@@ -311,17 +254,12 @@ src_install() {
 	make -j1 DESTDIR="${D}" install || die
 
 	# POST MAKE INSTALL SECTION:
-
-	# Move the libraries to the proper location
-	gcc_movelibs
-
 	# Basic sanity check
 	local EXEEXT
 	eval $(grep ^EXEEXT= "${WORKDIR}"/objdir/gcc/config.log)
 	[[ -r ${D}${BINPATH}/gcc${EXEEXT} ]] || die "gcc not found in ${D}"
 
 	# CLEANUPS:
-
 	# Punt some tools which are really only useful while building gcc
 	find "${D}" -name install-tools -prune -type d -exec rm -rf "{}" \;
 	# This one comes with binutils
