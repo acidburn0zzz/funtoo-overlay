@@ -1,6 +1,28 @@
-# Oleg Vinichenko (15 Mar 2013) 
-# mask xorg-server-1.14, driver incompatibility, FL-449
->x11-base/xorg-server-1.13.3
+# Oleg Vinichenko (23 Apr 2013)
+# mask xorg-server-1.14, driver incompatibility, FL-449, FL-522,
+# security update for xorg-server
+>x11-base/xorg-server-1.13.4
+
+# FL-484, mask broken libXft and freetype
+>=media-libs/freetype-2.4.11-r1
+>=x11-libs/libXft-2.3.1-r1
+#
+# Oleg Vinichenko (19 Apr 2013)
+# mask back mpc-1.0.1, ebuild itself is fine and usable
+# the mask required for metro stages successfully built until 
+# we implement newer gcc ebuilds, see FL-507
+>=dev-libs/mpc-1.0 
+
+# Not currently maintained, last commit near 1 yr ago
+# ZFSOnLinux is a muche more viable and mature replacement 
+sys-fs/zfs-fuse
+
+# Ryan Harris (20 June 2012)
+# mask automake-1.12.1 due to multiple failures 
+# Ref b.g.o.# 421465
+# Oleg Vinichenko (16 Apr 2013)
+# 1.12 now pretty safe to use, we will keep 1.13 masked FL-499
+>=sys-devel/automake-1.13
 
 # FL-406, mask latest hwids
 # Jean-Francis Roy (11 Feb 2013)
@@ -10,10 +32,6 @@
 # mask latest pax-utils, it has some issues, ldtree (#452178),
 # breaks genkernels binaries (FL-345, #450688)
 >=app-misc/pax-utils-0.6
-
-# Oleg Vinichenko (25 Dec 2012)
-# FL-288 mask latests syslinux
->=sys-boot/syslinux-5.00
 
 # Oleg Vinichenko (17 Dec 2012)
 # mask >dev-perl/Net-DNS-0.680.0 due to FL-275
@@ -36,13 +54,10 @@
 # less-452 breaks man pages
 >=sys-apps/less-452
 
-# Oleg Vinichenko (7 Sep 2012)
-# mask latest dev-libs/mpc, breaks stages
->=dev-libs/mpc-1.0
-
 # Oleg Vinichenko (22 Jul 2012)
 # mask libusbx, try to avoid pulling into stages
 >=dev-libs/libusbx-1.0.12
+
 
 # Adrien Dessemond (09 May 2012)
 # Python 2.7.4-pre and 3.2.4-pre versions are problematic to fetch from upstrea$
