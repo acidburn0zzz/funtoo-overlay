@@ -1,5 +1,6 @@
-EAPI="4-python"
-PYTHON_DEPEND="<<2:2.6>>"
+EAPI="5-progress"
+PYTHON_MULTIPLE_ABIS="1"
+PYTHON_RESTRICTED_ABIS="3.* *-jython *-pypy-*"
 inherit eutils python
 
 DESCRIPTION="RabbitMQ is a high-performance AMQP-compliant message broker written in Erlang."
@@ -18,14 +19,12 @@ DEPEND="${RDEPEND}
 	app-text/docbook-xml-dtd:4.5
 	app-text/xmlto
 	dev-libs/libxslt 
-	dev-python/simplejson
-	"
+	$(python_abi_depend dev-python/simplejson)"
 # above simplejson dep could be improved -- ask Arfrever
 
 pkg_setup() {
 	enewgroup rabbitmq
 	enewuser rabbitmq -1 -1 /var/lib/rabbitmq rabbitmq
-	python_set_active_version 2
 }
 
 src_compile() {

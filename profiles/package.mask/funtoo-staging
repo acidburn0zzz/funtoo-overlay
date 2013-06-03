@@ -9,9 +9,9 @@
 # Adding mask for openssl-1.0.1e, clang update
 >=dev-libs/openssl-1.0.1e
 
-# Dan Molik (14 Apr 2013)
-# Adding mask for openssl-1.0.1e, clang update
->=dev-libs/openssl-1.0.1e
+# Oleg Vinichenko (3 Jun 2013)
+# FL-566, debian kernel update, masked for testing
+=sys-kernel/debian-sources-3.2.41
 
 # Daniel Robbins (10 Apr 2013)
 # FL-487: staging zenoss, as it is a work in progress.
