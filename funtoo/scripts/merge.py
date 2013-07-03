@@ -15,6 +15,7 @@ flora_overlay = Tree("flora", "master", "repos@git.funtoo.org:flora.git", pull=T
 progress_overlay = SvnTree("progress", "https://gentoo-progress.googlecode.com/svn/overlays/progress")
 sabayon_for_gentoo = Tree("sabayon-for-gentoo", "master", "git://github.com/Sabayon/for-gentoo.git", pull=True)
 mate_overlay = Tree("mate", "master", "git://github.com/Sabayon/mate-overlay.git", pull=True)
+bliss_overlay = Tree("bliss", "master", "git://github.com/fearedbliss/bliss-overlay.git", pull=True)
 
 steps = [
 	SyncTree(gentoo_src,exclude=["/metadata/cache/**","ChangeLog", "dev-util/metro"]),
@@ -34,15 +35,16 @@ steps = [
 		"profiles/arch/x86/use.mask":"profiles/funtoo/1.0/linux-gnu/arch/x86-32bit/use.mask/01-gentoo",
 		"profiles/default/linux/package.use.mask":"profiles/funtoo/1.0/linux-gnu/package.use.mask/01-gentoo",
 		"profiles/default/linux/use.mask":"profiles/funtoo/1.0/linux-gnu/use.mask/01-gentoo",
-		"profiles/arch/amd64/no-multilib/package.use.mask":"profiles/funtoo/1.0/linux-gnu/arch/x86-64bit/pure64/package.use.mask/01-gentoo",
-		"profiles/arch/amd64/no-multilib/package.mask":"profiles/funtoo/1.0/linux-gnu/arch/x86-64bit/pure64/package.mask/01-gentoo",
-		"profiles/arch/amd64/no-multilib/use.mask":"profiles/funtoo/1.0/linux-gnu/arch/x86-64bit/pure64/use.mask/01-gentoo"
+		"profiles/arch/amd64/no-multilib/package.use.mask":"profiles/funtoo/1.0/linux-gnu/arch/pure64/package.use.mask/01-gentoo",
+		"profiles/arch/amd64/no-multilib/package.mask":"profiles/funtoo/1.0/linux-gnu/arch/pure64/package.mask/01-gentoo",
+		"profiles/arch/amd64/no-multilib/use.mask":"profiles/funtoo/1.0/linux-gnu/arch/pure64/use.mask/01-gentoo"
 	}),
 	InsertEbuilds(funtoo_overlay, select="all", skip=None, replace=True),
 	InsertEbuilds(foo_overlay, select="all", skip=["sys-fs/mdev-bb", "media-video/handbrake"], replace=["app-shells/rssh","net-misc/unison"]),
 	InsertEbuilds(bar_overlay, select="all", skip=["app-emulation/qemu"], replace=False),
-	InsertEbuilds(flora_overlay, select="all", skip=["sys-fs/spl", "sys-fs/zfs"], replace=False),
+	InsertEbuilds(flora_overlay, select="all", skip=["sys-fs/spl", "sys-fs/zfs", "media-sound/oss"], replace=False),
 	InsertEbuilds(mate_overlay, select="all", skip=None, replace=False),
+	InsertEbuilds(bliss_overlay, select="all", skip=None, replace=False),
 	SyncDir(mate_overlay.root, "eclass"),
 	SyncDir(mate_overlay.root, "sets"),
 	SyncFiles(mate_overlay.root, { 

@@ -15,7 +15,7 @@
 
 arch		funtoo/1.0/linux-gnu/arch/x86-32bit			stable
 arch		funtoo/1.0/linux-gnu/arch/x86-64bit			stable
-arch		funtoo/1.0/linux-gnu/arch/x86-64bit/pure64		exp	
+arch		funtoo/1.0/linux-gnu/arch/pure64			exp	
 arch            funtoo/1.0/linux-gnu/arch/arm-32bit/armv7a_hardfp       exp
 arch            funtoo/1.0/linux-gnu/arch/arm-32bit/armv6j_hardfp       exp
 
@@ -27,6 +27,7 @@ flavor		funtoo/1.0/linux-gnu/flavor/minimal			stable
 flavor		funtoo/1.0/linux-gnu/flavor/core			stable
 flavor		funtoo/1.0/linux-gnu/flavor/desktop			stable
 flavor		funtoo/1.0/linux-gnu/flavor/workstation			stable
+flavor          funtoo/1.0/linux-gnu/flavor/hardened	                exp
 
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/audio		    	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/console-extras	    	stable

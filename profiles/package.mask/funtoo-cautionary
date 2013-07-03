@@ -1,3 +1,29 @@
+# Ryan Harris (30 Jun 2013)
+# Mask app-emulation/xen-tools-4.2.2-r1
+# depends on sys-app/texinfo-5
+=app-emulation/xen-tools-4.2.2-r1
+
+#  Oleg Vinichenko (27 Jun 2013)
+#  openrc, FL-34, removed udev dep, set MKNET=no
+#  for internal tests only
+=sys-apps/openrc-0.10.3
+
+#  Oleg Vinichenko ( 26 jun 2013)
+#  mask beta version of postgresql, FL-591
+>dev-db/postgresql-base-9.2.4
+
+#  Oleg Vinichenko (16 Jun 2013)
+#  mask broken hexchat ebuild FL-584
+>=net-irc/hexchat-2.9.5_p20130525 
+
+# Oleg Vinichenk (16 Jun 2013)
+# cautionary mask latest icu-51.2, breaks expected
+>=dev-libs/icu-51.2-r1000
+
+# Oleg Vinichenko (12 Jun 2013)
+# mask openmpi-1.6.4 due to sandbox issues, FL-578, https://bugs.gentoo.org/show_bug.cgi?id=462602
+=sys-cluster/openmpi-1.6.4
+
 # Jean-Francis Roy (3 Jun 2013)
 # Mask back app-admin/system-config-printer-{common,gnome}, depending
 # on >=virtual/udev-172, until FL-34 is resolved.
