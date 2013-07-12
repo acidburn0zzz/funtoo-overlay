@@ -1,3 +1,13 @@
+12 July 2013; Oleg Vinichenko <oleg@funtoo.org>
+
+FL-34
+Newer upstream udev-204. This is modified ebuild aimed to use
+as optional package for software that require it. It doesn't use
+any predictable naming interface, doesn't depend on openrtc, doesn't install
+in any runlevel (but provides scripts). 
+
+
+
 20 April 2012; Jean-Francis Roy <jeanfrancis@funtoo.org>
 
 Bumping udev-171 to depend of new hwids.
